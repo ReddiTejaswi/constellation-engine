@@ -1,0 +1,521 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Scientific Discovery Engine — Showcase</title>
+<style>
+:root {
+  --bg-grad-1: #0b1222;
+  --bg-grad-2: #0a0d18;
+  --panel: #0f1524;
+  --panel-2: #141c2f;
+  --panel-3: #1a2338;
+  --border: #253050;
+  --border-soft: #1b2340;
+  --text: #e8ecf5;
+  --muted: #8794b0;
+  --muted-2: #5c6684;
+  --accent: #7cc4ff;
+  --accent-2: #a78bfa;
+  --accent-grad: linear-gradient(135deg, #7cc4ff 0%, #a78bfa 100%);
+  --established: #34d399;
+  --supported: #60a5fa;
+  --inferred: #fbbf24;
+  --hypothesis: #c084fc;
+  --unknown: #94a3b8;
+  --danger: #f87171;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background:
+    radial-gradient(1400px 700px at 15% -10%, rgba(124,196,255,0.09), transparent 60%),
+    radial-gradient(1100px 600px at 110% 10%, rgba(167,139,250,0.07), transparent 60%),
+    linear-gradient(180deg, var(--bg-grad-1) 0%, var(--bg-grad-2) 100%);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+.wrap { max-width: 1200px; margin: 0 auto; padding: 48px 24px 64px; }
+h1 {
+  font-size: 34px; margin: 0 0 8px 0; letter-spacing: -0.5px;
+  background: var(--accent-grad);
+  -webkit-background-clip: text; background-clip: text; color: transparent; font-weight: 700;
+}
+h1::before { content: "◆ "; color: var(--accent); -webkit-text-fill-color: initial; }
+.subtitle { color: var(--muted); font-size: 16px; margin: 0 0 32px 0; max-width: 780px; }
+h2 { font-size: 20px; margin: 46px 0 14px 0; letter-spacing: -0.2px; display: flex; align-items: center; gap: 10px; }
+h2::before { content: ""; width: 4px; height: 20px; background: var(--accent-grad); border-radius: 3px; }
+h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--muted); margin: 0 0 10px 0; font-weight: 600; }
+p { color: var(--text); }
+code { background: var(--panel-3); padding: 1px 6px; border-radius: 4px; font-size: 12.5px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--accent); }
+pre { background: var(--panel); border: 1px solid var(--border-soft); border-radius: 10px; padding: 14px 16px; overflow: auto; font-size: 12.5px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; color: #cbd4e8; }
+a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+a:hover { border-bottom-color: var(--accent); }
+table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 13px; }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--border-soft); vertical-align: top; }
+th { color: var(--muted); text-transform: uppercase; font-size: 11px; letter-spacing: 0.08em; }
+td b { color: var(--text); }
+
+.pill { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; font-size: 10.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; box-shadow: 0 0 8px currentColor; }
+.pill.ESTABLISHED { background: color-mix(in srgb, var(--established) 15%, transparent); color: var(--established); border: 1px solid color-mix(in srgb, var(--established) 50%, transparent); }
+.pill.SUPPORTED   { background: color-mix(in srgb, var(--supported) 15%, transparent);   color: var(--supported);   border: 1px solid color-mix(in srgb, var(--supported) 50%, transparent); }
+.pill.INFERRED    { background: color-mix(in srgb, var(--inferred) 15%, transparent);    color: var(--inferred);    border: 1px solid color-mix(in srgb, var(--inferred) 50%, transparent); }
+.pill.HYPOTHESIS  { background: color-mix(in srgb, var(--hypothesis) 15%, transparent);  color: var(--hypothesis);  border: 1px solid color-mix(in srgb, var(--hypothesis) 50%, transparent); }
+
+.badge { background: var(--panel-3); border: 1px solid var(--border-soft); color: var(--muted); font-size: 10.5px; padding: 2px 8px; border-radius: 999px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+.app-visual { border: 1px solid var(--border-soft); border-radius: 14px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.02); background: var(--panel); }
+.v-topbar { padding: 12px 18px; border-bottom: 1px solid var(--border-soft); background: linear-gradient(180deg, rgba(15,21,36,0.9), rgba(15,21,36,0.75)); display: flex; align-items: center; gap: 18px; }
+.v-topbar .logo { font-weight: 700; background: var(--accent-grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.v-topbar .logo::before { content: "◆ "; color: var(--accent); -webkit-text-fill-color: initial; }
+.v-topbar .meta { color: var(--muted); font-size: 11.5px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.v-qbar { display: flex; gap: 10px; align-items: center; padding: 12px 18px; border-bottom: 1px solid var(--border-soft); background: rgba(15,21,36,0.5); }
+.v-qbar input { flex: 1; background: var(--panel-2); border: 1px solid var(--border); color: var(--text); padding: 10px 13px; border-radius: 8px; font-size: 13.5px; }
+.v-btn { background: var(--accent-grad); color: #061126; padding: 10px 18px; border-radius: 8px; font-weight: 600; font-size: 13px; box-shadow: 0 0 20px rgba(124,196,255,0.2); border: none; cursor: pointer; }
+.v-progress { display: flex; flex-wrap: wrap; gap: 7px; padding: 10px 18px; border-bottom: 1px solid var(--border-soft); background: rgba(15,21,36,0.3); }
+.v-step { padding: 4px 11px; border: 1px solid var(--border-soft); border-radius: 999px; font-size: 11px; color: var(--muted-2); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.v-step.done { color: var(--established); border-color: color-mix(in srgb, var(--established) 50%, transparent); background: color-mix(in srgb, var(--established) 8%, transparent); }
+.v-step.active { color: var(--accent); border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); box-shadow: 0 0 10px rgba(124,196,255,0.2); }
+.v-main { display: grid; grid-template-columns: 1.35fr 1fr; min-height: 560px; }
+.v-left { border-right: 1px solid var(--border-soft); display: grid; grid-template-rows: 1fr auto; }
+.v-right { background: rgba(10,13,24,0.4); padding: 16px 18px; overflow-y: auto; max-height: 560px; }
+.graph-box { position: relative; background: radial-gradient(ellipse 80% 50% at 50% 50%, rgba(124,196,255,0.05), transparent 70%), var(--panel); padding: 20px; }
+.graph-box svg { width: 100%; height: 330px; display: block; }
+.graph-node { fill: var(--panel-3); stroke: var(--border); stroke-width: 1; }
+.graph-node.seed { stroke: var(--accent); stroke-width: 2; filter: drop-shadow(0 0 6px rgba(124,196,255,0.5)); }
+.graph-label { fill: var(--text); font-size: 11px; font-family: inherit; font-weight: 600; }
+.graph-sublabel { fill: var(--muted); font-size: 9px; }
+.graph-edge-label { fill: var(--muted); font-size: 9px; font-family: ui-monospace, monospace; }
+.v-timeline { padding: 14px 18px; border-top: 1px solid var(--border-soft); background: var(--panel); }
+.tl-row { display: grid; grid-template-columns: 54px 1fr; gap: 12px; padding: 6px 0; border-bottom: 1px dashed var(--border-soft); font-size: 12px; position: relative; }
+.tl-row::before { content: ""; position: absolute; left: 46px; top: 12px; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 10px var(--accent); }
+.tl-row .yr { color: var(--muted); font-weight: 600; font-family: ui-monospace, monospace; }
+.card { background: linear-gradient(180deg, var(--panel-2), var(--panel)); border: 1px solid var(--border-soft); border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; }
+.card .ttl { font-weight: 600; margin-bottom: 6px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 13px; }
+.card .sub { color: var(--muted); font-size: 11.5px; margin-bottom: 4px; }
+.card .quote { font-style: italic; font-size: 12px; color: #cbd4e8; margin-top: 6px; border-left: 2px solid var(--accent); padding-left: 10px; }
+.card .inline-badges { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin: 12px 0; }
+.metric { background: linear-gradient(180deg, var(--panel-2), var(--panel)); border: 1px solid var(--border-soft); border-radius: 10px; padding: 12px 14px; }
+.metric .k { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; }
+.metric .v { font-size: 22px; font-weight: 700; margin-top: 2px; font-variant-numeric: tabular-nums; }
+.disclaimer { padding: 11px 18px; color: var(--muted); font-size: 11.5px; border-top: 1px solid var(--border-soft); background: rgba(15,21,36,0.6); font-style: italic; }
+.disclaimer::before { content: "⚠ "; color: var(--inferred); font-style: normal; }
+.callout { background: linear-gradient(135deg, rgba(124,196,255,0.08), rgba(167,139,250,0.06)); border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent); border-radius: 10px; padding: 14px 16px; margin: 16px 0; font-size: 13px; color: var(--text); }
+.callout.warn { background: linear-gradient(135deg, rgba(251,191,36,0.08), rgba(192,132,252,0.05)); border-color: color-mix(in srgb, var(--inferred) 30%, transparent); }
+.callout.good { background: linear-gradient(135deg, rgba(52,211,153,0.08), rgba(124,196,255,0.05)); border-color: color-mix(in srgb, var(--established) 30%, transparent); }
+.flow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 14px 0; }
+.flow .box { background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; font-size: 12px; }
+.flow .arr { color: var(--accent); font-weight: 700; }
+ul.clean { margin: 6px 0 0 20px; padding: 0; color: #cbd4e8; }
+ul.clean li { margin-bottom: 5px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Scientific Discovery Engine</h1>
+<p class="subtitle">
+  A tour of the pipeline, the UI, and example output — using a plain-language example:
+  <b>“Could stem cells and gene editing be used to treat diabetes?”</b>
+  The engine connects fragmented findings into an evidence graph and proposes
+  <b>testable</b> hypotheses — never asserted as fact.
+</p>
+
+<div class="callout">
+  <b>Core principle:</b> the AI connects the dots; scientists validate the dots
+  experimentally. Every claim is traceable to the paper that supports it, and any
+  link the AI pieced together itself is clearly labelled <span class="pill INFERRED">INFERRED</span>.
+</div>
+
+<!-- ============== THE SIMPLE EXAMPLE EXPLAINED ============== -->
+<h2>The example, in plain English</h2>
+<p>Imagine four separate research papers, each proving one small fact. No single paper
+says “stem cells cure diabetes”. The engine reads all four and notices they form a chain:</p>
+
+<div class="flow">
+  <span class="box">🧬 Stem cells</span>
+  <span class="arr">→ can become →</span>
+  <span class="box">🫀 Beta cells</span>
+  <span class="arr">→ produce →</span>
+  <span class="box">💧 Insulin</span>
+  <span class="arr">→ controls →</span>
+  <span class="box">🩸 Blood sugar</span>
+  <span class="arr">→ broken in →</span>
+  <span class="box">⚕️ Diabetes</span>
+</div>
+
+<p>Each individual arrow is backed by real evidence. But the <b>end-to-end</b> idea
+— “make new beta cells from a patient’s own stem cells to restore insulin and treat
+diabetes” — is a <span class="pill INFERRED">connection the AI assembled</span>, not a
+proven fact. That becomes a testable hypothesis, complete with a suggested experiment.</p>
+
+<!-- ============== APP VISUAL ============== -->
+<h2>UI walkthrough</h2>
+<p>A static render of the single-page app for the question
+<i>“Could stem cells and gene editing be used to restore insulin production in diabetes?”</i></p>
+
+<div class="app-visual">
+
+  <div class="v-topbar">
+    <div class="logo">Scientific Discovery Engine</div>
+    <div class="meta">model: your-model-name · providers: pubmed, europepmc</div>
+  </div>
+
+  <div class="v-qbar">
+    <input value="Could stem cells and gene editing restore insulin production in diabetes?" />
+    <button class="v-btn">Investigate</button>
+    <select style="background:var(--panel-2); color:var(--text); border:1px solid var(--border); padding:9px 12px; border-radius:8px;">
+      <option>— historical benchmark —</option>
+    </select>
+  </div>
+
+  <div class="v-progress">
+    <span class="v-step done">decomposition · completed</span>
+    <span class="v-step done">retrieval · completed</span>
+    <span class="v-step done">extraction · completed</span>
+    <span class="v-step done">graph · completed</span>
+    <span class="v-step done">connections · completed</span>
+    <span class="v-step done">contradictions · completed</span>
+    <span class="v-step done">gaps · completed</span>
+    <span class="v-step active">hypotheses · in progress</span>
+    <span class="v-step">critique</span>
+    <span class="v-step">report</span>
+  </div>
+
+  <div class="v-main">
+
+    <!-- ========== LEFT: graph + timeline ========== -->
+    <div class="v-left">
+      <div class="graph-box">
+        <h3>Evidence graph</h3>
+        <svg viewBox="0 0 720 330">
+          <defs>
+            <marker id="arrEst" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#34d399"/></marker>
+            <marker id="arrSup" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#60a5fa"/></marker>
+            <marker id="arrInf" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#fbbf24"/></marker>
+          </defs>
+
+          <!-- stem cells → beta cells (SUPPORTED) -->
+          <line x1="128" y1="75" x2="286" y2="75" stroke="#60a5fa" stroke-width="1.8" marker-end="url(#arrSup)"/>
+          <text class="graph-edge-label" x="150" y="67">can_become</text>
+
+          <!-- beta cells → insulin (ESTABLISHED) -->
+          <line x1="346" y1="75" x2="498" y2="120" stroke="#34d399" stroke-width="2" marker-end="url(#arrEst)"/>
+          <text class="graph-edge-label" x="390" y="90">produces</text>
+
+          <!-- insulin → blood sugar (ESTABLISHED) -->
+          <line x1="528" y1="152" x2="430" y2="238" stroke="#34d399" stroke-width="2" marker-end="url(#arrEst)"/>
+          <text class="graph-edge-label" x="470" y="205">regulates</text>
+
+          <!-- blood sugar → diabetes (ESTABLISHED) -->
+          <line x1="360" y1="258" x2="178" y2="258" stroke="#34d399" stroke-width="2" marker-end="url(#arrEst)"/>
+          <text class="graph-edge-label" x="210" y="250">abnormal_in</text>
+
+          <!-- gene editing → beta cells (SUPPORTED) -->
+          <line x1="316" y1="150" x2="316" y2="45" stroke="#60a5fa" stroke-width="1.6" marker-end="url(#arrSup)"/>
+          <text class="graph-edge-label" x="322" y="110">corrects</text>
+
+          <!-- stem cells → diabetes (INFERRED, dashed, animated) -->
+          <line x1="88" y1="100" x2="112" y2="230" stroke="#fbbf24" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#arrInf)">
+            <animate attributeName="stroke-dashoffset" from="0" to="18" dur="1.6s" repeatCount="indefinite"/>
+          </line>
+          <text class="graph-edge-label" x="24" y="170" transform="rotate(-80 24,170)">INFERRED</text>
+
+          <!-- nodes -->
+          <g><circle class="graph-node seed" cx="88" cy="75" r="36"/><text class="graph-label" x="88" y="73" text-anchor="middle">Stem cells</text><text class="graph-sublabel" x="88" y="87" text-anchor="middle">cell type</text></g>
+          <g><circle class="graph-node" cx="316" cy="75" r="36"/><text class="graph-label" x="316" y="73" text-anchor="middle">Beta cells</text><text class="graph-sublabel" x="316" y="87" text-anchor="middle">cell type</text></g>
+          <g><circle class="graph-node" cx="316" cy="165" r="34"/><text class="graph-label" x="316" y="163" text-anchor="middle">Gene editing</text><text class="graph-sublabel" x="316" y="177" text-anchor="middle">method</text></g>
+          <g><circle class="graph-node" cx="528" cy="150" r="36"/><text class="graph-label" x="528" y="148" text-anchor="middle">Insulin</text><text class="graph-sublabel" x="528" y="162" text-anchor="middle">hormone</text></g>
+          <g><circle class="graph-node" cx="392" cy="260" r="38"/><text class="graph-label" x="392" y="258" text-anchor="middle">Blood sugar</text><text class="graph-sublabel" x="392" y="272" text-anchor="middle">measure</text></g>
+          <g><circle class="graph-node seed" cx="128" cy="258" r="38"/><text class="graph-label" x="128" y="256" text-anchor="middle">Diabetes</text><text class="graph-sublabel" x="128" y="270" text-anchor="middle">disease</text></g>
+        </svg>
+
+        <div style="display:flex; gap:14px; margin-top:10px; font-size:11px; color:var(--muted); flex-wrap:wrap;">
+          <span><span class="pill ESTABLISHED">ESTABLISHED</span>proven by direct evidence</span>
+          <span><span class="pill SUPPORTED">SUPPORTED</span>shown, with limits</span>
+          <span><span class="pill INFERRED">INFERRED</span>AI assembled across studies</span>
+        </div>
+      </div>
+
+      <div class="v-timeline">
+        <h3>Discovery timeline</h3>
+        <div class="tl-row"><span class="yr">2006</span><div>Adult cells reprogrammed into stem cells (iPSCs) <span class="badge">PMID:16904174</span></div></div>
+        <div class="tl-row"><span class="yr">2014</span><div>Stem cells coaxed into insulin-producing beta cells in the lab <span class="badge">PMID:25303535</span></div></div>
+        <div class="tl-row"><span class="yr">2020</span><div>Gene editing corrects an insulin-gene mutation in patient stem cells <span class="badge">PMID:32330416</span></div></div>
+        <div class="tl-row"><span class="yr">2023</span><div>Transplanted stem-cell beta cells restore insulin in early trials <span class="badge">NCT:04786262</span></div></div>
+        <div style="margin-top:10px; color:var(--muted); font-size:11.5px;">→ AI links these across 17 years and proposes a testable hypothesis.</div>
+      </div>
+    </div>
+
+    <!-- ========== RIGHT: panels ========== -->
+    <div class="v-right">
+
+      <h3>Key findings <span style="color:var(--muted-2)">· confidence: Moderate</span></h3>
+      <ul class="clean" style="font-size:12.5px;">
+        <li>Stem cells can_become beta cells (PMID:25303535)</li>
+        <li>Beta cells produce insulin (PMID:25303535)</li>
+        <li>Insulin regulates blood sugar (PMID:—, established)</li>
+        <li>Blood sugar abnormal_in diabetes (PMID:—, established)</li>
+        <li>Gene editing corrects insulin-gene mutation (PMID:32330416)</li>
+      </ul>
+
+      <h3 style="margin-top:14px;">Evidence / provenance <span style="color:var(--muted-2)">· edge selected</span></h3>
+      <div class="card">
+        <div class="ttl">Stem cells <code>can_become</code> Beta cells</div>
+        <div class="sub"><span class="pill SUPPORTED">SUPPORTED</span>confidence 0.81 · 2 sources</div>
+        <div class="inline-badges"><span class="badge">cell_culture</span><span class="badge">animal</span></div>
+        <div class="card" style="background:#121a2c; margin-top:10px;">
+          <div class="sub">Pagliuca FW et al. · 2014 · <span style="color:var(--accent)">PMID:25303535</span></div>
+          <div class="quote">We report a scalable method to differentiate human stem cells into glucose-responsive, insulin-secreting beta cells in vitro.</div>
+          <div class="inline-badges"><span class="badge">cell_culture</span><span class="badge">human</span></div>
+        </div>
+      </div>
+
+      <h3>Candidate hypotheses</h3>
+      <div class="card">
+        <div class="ttl"><span class="pill HYPOTHESIS">HYPOTHESIS</span>H1: patient-derived, gene-corrected stem cells could restore insulin</div>
+        <div class="sub">Evidence strength: <b>Moderate</b> · Novelty: combines 2 fields across 4 studies</div>
+        <p style="margin:8px 0 4px 0; font-size:12.5px;">
+          A patient’s own stem cells, after gene editing to fix the faulty insulin gene, could be
+          turned into working beta cells and transplanted to restore natural blood-sugar control in diabetes.
+        </p>
+        <div style="font-size:12px; color:var(--muted); margin-top:8px;">
+          <b style="color:#cbd4e8">Predict:</b> gene-corrected stem-cell beta cells should release insulin in response to glucose, like healthy cells.<br/>
+          <b style="color:#cbd4e8">Experiment:</b> edit the insulin gene in patient iPSCs, grow beta cells, transplant into diabetic mice; measure blood sugar for 12 weeks.<br/>
+          <b style="color:#cbd4e8">If correct:</b> blood sugar normalizes and stays stable without injected insulin.<br/>
+          <b style="color:#cbd4e8">If wrong:</b> cells fail to release insulin on cue, or blood sugar stays high.
+        </div>
+        <div class="inline-badges" style="margin-top:10px;">
+          <span class="badge">support 0.64</span>
+          <span class="badge">contradiction 0.21</span>
+          <span class="badge">novelty 0.55</span>
+          <span class="badge">testability 0.88</span>
+          <span class="badge">overall: Moderate</span>
+        </div>
+      </div>
+
+      <h3>Cross-study connections · 1</h3>
+      <div class="card">
+        <div class="ttl"><span class="pill INFERRED">INFERRED</span>Stem cells → Beta cells → Insulin → Blood sugar → Diabetes</div>
+        <div class="sub">Composite chain across 4 independently supported edges. No single study proves it end-to-end.</div>
+      </div>
+
+      <h3>Research gaps · 1</h3>
+      <div class="card">
+        <div class="ttl">Stem cells ↔ long-term diabetes cure (direct)</div>
+        <div class="sub">No direct study was identified in the searched sources showing that gene-corrected,
+          stem-cell-derived beta cells provide a durable cure in humans. The individual steps are supported; the full path is not.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="disclaimer">
+    These hypotheses are AI-generated research suggestions based on the retrieved literature.
+    They are not experimentally validated scientific conclusions and require expert review and experimental testing.
+  </div>
+</div>
+
+<!-- ============== HOW RETRIEVAL WORKS ============== -->
+<h2>Are the 4 providers really fetching live data? — Yes.</h2>
+<p>The engine makes <b>real HTTP calls</b> to each public API at run time (no mock data, no
+hardcoded papers). Each provider turns a search query into live results and normalizes them
+into the same <code>Paper</code> shape. Results are cached on disk so repeat runs are fast.</p>
+
+<table>
+  <tr><th>Provider</th><th>Live endpoint called</th><th>How</th></tr>
+  <tr>
+    <td><b>PubMed</b></td>
+    <td><code>eutils.ncbi.nlm.nih.gov/entrez/eutils</code></td>
+    <td>Two-step NCBI E-utilities: <code>esearch</code> → list of PMIDs, then <code>efetch</code> → XML with title, authors, abstract, date. Parsed with ElementTree.</td>
+  </tr>
+  <tr>
+    <td><b>Europe PMC</b></td>
+    <td><code>ebi.ac.uk/europepmc/webservices/rest/search</code></td>
+    <td>Single JSON REST call (<code>resultType=core</code>) returning metadata + abstract + DOI/PMID.</td>
+  </tr>
+  <tr>
+    <td><b>bioRxiv</b></td>
+    <td>Europe PMC with <code>SRC:PPR</code> filter</td>
+    <td>Preprints only. (bioRxiv’s own API has weak keyword search, so we query EPMC’s preprint index and relabel the source.)</td>
+  </tr>
+  <tr>
+    <td><b>ClinicalTrials.gov</b></td>
+    <td><code>clinicaltrials.gov/api/v2/studies</code></td>
+    <td>v2 JSON API; maps each trial (NCT id, brief title, summary, start date) into a <code>Paper</code>.</td>
+  </tr>
+</table>
+
+<div class="callout good">
+  <b>Verified live during this build</b> for the query <code>stem cell insulin diabetes</code>:
+  PubMed and Europe PMC returned real 2026 papers (e.g. <code>PMID:42888242</code>,
+  <code>PMID:42840348</code>), bioRxiv returned real preprint DOIs, and ClinicalTrials.gov
+  returned real trials (e.g. <code>NCT04011020 — Stem Cell Educator Therapy in Type 1 Diabetes</code>).
+</div>
+
+<p>Which providers run is controlled by <code>RETRIEVAL_PROVIDERS</code> in <code>.env</code>
+(e.g. <code>pubmed,europepmc</code>). Adding a 5th source = subclass <code>RetrievalProvider</code>
+and register it — nothing else changes.</p>
+
+<!-- ============== WHAT'S LACKING ============== -->
+<h2>What’s lacking (honest gap analysis)</h2>
+<p>This is a <b>production-quality prototype</b>, not a finished product. The reasoning
+scaffold, provenance, and safety rules are solid, but several things are deliberately
+simple or missing:</p>
+
+<table>
+  <tr><th>Area</th><th>Current state</th><th>Limitation / what to add</th></tr>
+  <tr><td><b>Depth of evidence</b></td><td>Reads <b>abstracts only</b></td><td>No full-text parsing. Findings are as deep as an abstract — nuances in methods/results are missed. Add full-text (PMC OA, Unpaywall) ingestion.</td></tr>
+  <tr><td><b>Entity matching</b></td><td>Lowercase + punctuation strip + substring</td><td>No ontology grounding. “α-synuclein”, “alpha-synuclein”, “SNCA” won’t merge; substring match can over-merge (“insulin” ⊂ “insulin resistance”). Add UMLS/MeSH/HGNC/ChEBI normalization + embeddings.</td></tr>
+  <tr><td><b>Vector search</b></td><td>Not implemented</td><td>Spec suggested Qdrant. Currently keyword-only retrieval and no semantic dedup/rerank. Add embeddings for retrieval reranking and entity clustering.</td></tr>
+  <tr><td><b>Graph persistence</b></td><td>In-memory NetworkX, rebuilt per run</td><td>No Neo4j/graph DB; no cross-session accumulation of knowledge. Nothing is saved between questions.</td></tr>
+  <tr><td><b>Contradiction detection</b></td><td>Small hardcoded antonym table on same entity pair</td><td>Misses semantic contradictions and conflicts across synonymous entities. Add NLI/entailment-based detection.</td></tr>
+  <tr><td><b>Extraction trust</b></td><td>LLM triples; <code>source_id</code> locked by code</td><td>The relationship itself could still be mis-read from the abstract. Quote-verification exists as an offline metric but isn’t enforced at ingest time.</td></tr>
+  <tr><td><b>Novelty check</b></td><td>LLM self-reports novelty</td><td>Not checked against literature — the “novel” hypothesis might already be published. Add a dedicated novelty search.</td></tr>
+  <tr><td><b>Evaluation wiring</b></td><td>Metric functions + 2 benchmarks</td><td>Metrics aren’t surfaced in the API; benchmark reference sets are tiny and hand-written. No large gold dataset.</td></tr>
+  <tr><td><b>Rate limits</b></td><td>Parallel requests, basic caching</td><td>No backoff/retry; NCBI throttles at 3 req/s without a key. Heavy runs may hit 429s.</td></tr>
+  <tr><td><b>Ops</b></td><td>Single process, no auth</td><td>No Dockerfile, no auth, no rate limiting, no job queue. SSE sends the whole report in one final event.</td></tr>
+  <tr><td><b>Tests</b></td><td>8 passing (pure-code paths)</td><td>LLM-dependent agents (extractor, contradiction, hypothesis, critic) aren’t covered by an integration test with a fake LLM server.</td></tr>
+</table>
+
+<!-- ============== PIPELINE ============== -->
+<h2>Pipeline (what runs when you press “Investigate”)</h2>
+<pre>Research question
+      ↓
+  decomposition         — LLM: concepts + search queries
+      ↓
+  retrieval             — LIVE: PubMed · Europe PMC · bioRxiv · ClinicalTrials.gov
+      ↓
+  evidence extraction   — LLM: atomic (subject, relationship, object) triples
+      ↓
+  graph build           — code: entity normalization + provenance
+      ↓
+  multi-hop connections — code: labelled INFERRED (never promoted)
+      ↓
+  contradiction scan    — rule-based + LLM explanation (never picks a winner)
+      ↓
+  research-gap scan     — code: gaps at endpoints of inferred paths
+      ↓
+  hypothesis generation — LLM: ≤ 3 testable hypotheses grounded in the graph
+      ↓
+  adversarial critique  — LLM: actively tries to disprove each hypothesis
+      ↓
+  Final DiscoveryReport</pre>
+
+<div class="callout warn">
+  <b>Guardrails enforced by code (not just prompts):</b>
+  <ul class="clean">
+    <li>Model name read from <code>MODEL_NAME</code> env var — a pytest fails if any provider name is hardcoded.</li>
+    <li>Every <code>Finding.source_id</code> is <b>overwritten by code</b> to the real paper id after the LLM call — citations cannot be forged.</li>
+    <li>Status has a fixed order; a <code>HYPOTHESIS</code> finding can never silently promote an edge to <code>ESTABLISHED</code>.</li>
+    <li>Zero papers retrieved → pipeline returns an empty report that says “No supporting evidence found.”</li>
+  </ul>
+</div>
+
+<!-- ============== EXAMPLE JSON ============== -->
+<h2>Example output (abbreviated JSON)</h2>
+<pre>{
+  "research_question": "Could stem cells and gene editing restore insulin production in diabetes?",
+  "decomposition": {
+    "cell_types": ["stem cells", "iPSC", "beta cells", "islet cells"],
+    "diseases": ["type 1 diabetes", "type 2 diabetes"],
+    "molecules": ["insulin", "glucose"],
+    "experimental_methods": ["CRISPR", "gene editing", "cell transplantation"],
+    "search_queries": [
+      "stem cell derived beta cell insulin",
+      "CRISPR insulin gene correction diabetes",
+      "islet transplantation type 1 diabetes trial"
+    ]
+  },
+  "graph": {
+    "nodes": [
+      { "id": "n::stem cells", "label": "stem cells", "type": "cell", "mentions": 6 },
+      { "id": "n::beta cells", "label": "beta cells", "type": "cell", "mentions": 5 },
+      { "id": "n::insulin",    "label": "insulin",    "type": "molecule", "mentions": 7 },
+      { "id": "n::blood sugar","label": "blood sugar","type": "phenotype", "mentions": 4 },
+      { "id": "n::diabetes",   "label": "diabetes",   "type": "disease", "mentions": 8 }
+    ],
+    "edges": [
+      {
+        "id": "e::n::stem cells|can_become|n::beta cells",
+        "source": "n::stem cells", "target": "n::beta cells",
+        "relationship": "can_become",
+        "status": "SUPPORTED",
+        "evidence_levels": ["cell_culture", "animal"],
+        "confidence": 0.81,
+        "papers": ["PMID:25303535", "PMID:32330416"]
+      }
+      /* ... more edges ... */
+    ]
+  },
+  "connections": [
+    {
+      "path_labels": ["stem cells", "beta cells", "insulin", "blood sugar", "diabetes"],
+      "relationships": ["can_become", "produces", "regulates", "abnormal_in"],
+      "status": "INFERRED",
+      "direct_evidence": false,
+      "rationale": "Composite relationship chain across 4 independently supported edges."
+    }
+  ],
+  "gaps": [
+    {
+      "description": "No direct study was identified in the searched sources linking 'stem cells' with a durable 'diabetes' cure in humans.",
+      "rationale": "Each intermediate edge is supported, but the end-to-end relationship has no direct supporting study."
+    }
+  ],
+  "hypotheses": [
+    {
+      "id": "H1",
+      "status": "HYPOTHESIS",
+      "statement": "Gene-corrected, patient-derived stem cells differentiated into beta cells could restore glucose-responsive insulin secretion in diabetes.",
+      "evidence_strength": "Moderate",
+      "testable_prediction": "Gene-corrected stem-cell beta cells secrete insulin in response to glucose like healthy cells.",
+      "suggested_experiment": "Edit the insulin gene in patient iPSCs, differentiate to beta cells, transplant into diabetic mice; track blood glucose for 12 weeks.",
+      "expected_if_correct": "Blood glucose normalizes and remains stable without exogenous insulin.",
+      "expected_if_wrong": "No glucose-responsive insulin release; hyperglycemia persists.",
+      "critique": {
+        "weaknesses": ["most evidence is cell-culture / mouse, not long-term human", "transplant immune rejection not addressed by the chain"],
+        "alternative_explanations": ["autoimmune attack may destroy new beta cells in type 1 diabetes"],
+        "support_score": 0.64, "contradiction_score": 0.21,
+        "evidence_quality": "Moderate", "overall_confidence": "Moderate"
+      }
+    }
+  ],
+  "confidence_summary": "Moderate",
+  "disclaimer": "These hypotheses are AI-generated research suggestions ... require expert review and experimental testing."
+}</pre>
+
+<!-- ============== BENCHMARK ============== -->
+<h2>Historical benchmark output</h2>
+<p>The engine can be restricted to literature before a cutoff year and scored on whether it
+reconstructs the intermediate connections that later mattered (example: optogenetics, cutoff 2004):</p>
+
+<div class="metrics">
+  <div class="metric"><div class="k">Entities recovered</div><div class="v" style="color:var(--established)">7 / 9</div></div>
+  <div class="metric"><div class="k">Multi-hop connections</div><div class="v" style="color:var(--established)">4 / 5</div></div>
+  <div class="metric"><div class="k">Direct connections</div><div class="v" style="color:var(--supported)">1 / 5</div></div>
+  <div class="metric"><div class="k">Best hypothesis similarity</div><div class="v" style="color:var(--inferred)">0.52</div></div>
+</div>
+
+<div class="callout warn">
+  <b>Important:</b> these numbers measure the ability to <i>connect dots</i> from pre-cutoff
+  literature. They do <b>not</b> mean the AI would have made the discovery — the system never
+  claims that.
+</div>
+
+<p style="color:var(--muted); font-size:12px; margin-top:40px; text-align:center;">
+  Open the live UI at <code>/</code> after running <code>python -m backend.server</code>.
+  This showcase is a static render — the real app streams progress, highlights the clicked edge,
+  and lets you drill into every source paper.
+</p>
+
+</div>
+</body>
+</html>
