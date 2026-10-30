@@ -95,7 +95,7 @@ python3.13 -m venv .venv
 
 ```bash
 cd frontend
-npm install
+npm ci
 npm run build            # production bundle, served by FastAPI at /
 # or during development:
 npm run dev              # http://localhost:5173, proxies /api → :8000

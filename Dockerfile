@@ -1,10 +1,9 @@
 FROM node:22-slim AS frontend-build
 WORKDIR /build/frontend
-RUN corepack enable && corepack prepare pnpm@10.8.1 --activate
-COPY frontend/package.json frontend/pnpm-lock.yaml frontend/pnpm-workspace.yaml ./
-RUN pnpm install --frozen-lockfile
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci
 COPY frontend/ ./
-RUN pnpm run build
+RUN npm run build
 
 FROM python:3.12-slim AS runtime
 ENV PYTHONDONTWRITEBYTECODE=1 \
