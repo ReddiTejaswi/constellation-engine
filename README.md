@@ -187,6 +187,10 @@ The engine must never claim medical efficacy, cures, or causal certainty on
 the basis of inference alone. If evidence is insufficient the correct answer
 is "Insufficient evidence." — not a forced answer.
 
+## 11. License
+
+This project is licensed under the [MIT License](LICENSE).
+
 ## 10. Public hackathon demo (Render, free tier)
 
 The repository includes a Docker deployment and Render Blueprint in `Dockerfile`
