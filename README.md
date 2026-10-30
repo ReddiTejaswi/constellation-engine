@@ -74,22 +74,37 @@ scientific-discovery-engine/
 
 ### Requirements
 
-- Python 3.13
+- Python 3.12
 - Node 20+
-- An OpenAI-compatible chat completions endpoint (e.g. a Nebius / NVIDIA / local
-  vLLM / OpenRouter deployment of your choice)
+- An OpenAI-compatible chat completions endpoint. For the hackathon build, use
+  Nebius Token Factory with an NVIDIA open model; other compatible endpoints
+  can be used for local development.
 
 ### Backend
 
 ```bash
+# Linux / macOS
 cp .env.example .env
 # Edit .env and provide at least MODEL_NAME, MODEL_BASE_URL, MODEL_API_KEY.
 
-python3.13 -m venv .venv
-.venv/bin/pip install -r requirements.txt
+python3.12 -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
 .venv/bin/python -m backend.server
 # → serves on http://${HOST:-0.0.0.0}:${PORT:-8000}
 ```
+
+On Windows PowerShell:
+
+```powershell
+Copy-Item .env.example .env
+py -3.12 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+# Edit .env, then start the backend:
+.\.venv\Scripts\python.exe -m backend.server
+```
+
+Set `MODEL_NAME`, `MODEL_BASE_URL`, and `MODEL_API_KEY` in the local `.env`
+file before starting the server.
 
 ### Frontend
 
@@ -107,8 +122,11 @@ single process is enough in production.
 ### Tests
 
 ```bash
+# Linux / macOS
 .venv/bin/python -m pytest -q
 ```
+
+On Windows PowerShell: `\.venv\Scripts\python.exe -m pytest -q`.
 
 Includes a test that **fails if any hardcoded model name** (`gpt-4`,
 `claude-`, etc.) is found in the backend source tree.
@@ -187,35 +205,15 @@ The engine must never claim medical efficacy, cures, or causal certainty on
 the basis of inference alone. If evidence is insufficient the correct answer
 is "Insufficient evidence." — not a forced answer.
 
+## 10. Hackathon model integration
+
+For the hackathon deployment, the backend makes runtime chat-completions calls
+to Nebius Token Factory using an NVIDIA open model selected through
+`MODEL_NAME`. The Token Factory URL and model credentials are configured on the
+server; the API key is never exposed to the frontend. AI-generated answers,
+connections, and hypotheses are grounded in retrieved papers and remain
+research suggestions that require expert review.
+
 ## 11. License
 
 This project is licensed under the [MIT License](LICENSE).
-
-## 10. Public hackathon demo (Render, free tier)
-
-The repository includes a Docker deployment and Render Blueprint in `Dockerfile`
-and `render.yaml`. Connect this GitHub repository to Render as a **Blueprint**
-and select branch `usr/reddi-tejaswi/init`. The Blueprint creates one free web
-service, builds the React frontend, serves it from FastAPI, and checks
-`/api/health`.
-
-Before the first deploy, set these service environment variables in Render:
-
-- `MODEL_NAME`: the exact model ID from Token Factory.
-- `MODEL_API_KEY`: the Token Factory API key. Enter it in Render's Environment
-  page as a secret; never put it in GitHub, `render.yaml`, or the frontend.
-
-`MODEL_BASE_URL` is set in the Blueprint. The public demo enables per-IP
-request throttling and limits each AI investigation to four unique papers.
-The answer verdict and summary are generated from the retrieved abstracts and
-validated findings; with AI disabled, API-only search shows papers but does not
-invent a yes/no answer.
-Keep the Render service on the Free plan. Free services sleep after 15 minutes
-without requests and may take about a minute to wake. Render's free plan has
-usage limits; if a payment method is attached, set a workspace spend limit to
-avoid charges beyond included usage. Nebius model requests use Token Factory
-credits separately.
-
-The local `.env` is excluded by both `.gitignore` and `.dockerignore`. The
-deployment image runs as a non-root user and does not copy local secrets or
-retrieval caches.
