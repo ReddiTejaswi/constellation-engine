@@ -3,7 +3,7 @@ services:
     name: constellation-engine-demo
     runtime: docker
     plan: free
-    branch: usr/reddi-tejaswi/init
+    branch: main
     dockerfilePath: ./Dockerfile
     dockerContext: .
     healthCheckPath: /api/health
