@@ -214,6 +214,11 @@ server; the API key is never exposed to the frontend. AI-generated answers,
 connections, and hypotheses are grounded in retrieved papers and remain
 research suggestions that require expert review.
 
-## 11. License
+## 11. Contributors
+
+- [Reddi Tejaswi Rasetty](https://github.com/ReddiTejaswi)
+- [gandharvam](https://github.com/gandharvam)
+
+## 12. License
 
 This project is licensed under the [MIT License](LICENSE).
