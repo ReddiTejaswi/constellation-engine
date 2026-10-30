@@ -79,6 +79,14 @@ export interface ResearchGap {
   rationale: string;
 }
 
+export interface ResearchAnswer {
+  verdict: "yes" | "no" | "mixed/uncertain" | "insufficient evidence";
+  answer: string;
+  evidence_summary: string;
+  source_ids: string[];
+  limitations: string[];
+}
+
 export interface HypothesisCritique {
   weaknesses: string[];
   alternative_explanations: string[];
@@ -125,6 +133,7 @@ export interface DiscoveryReport {
   contradictions: Contradiction[];
   gaps: ResearchGap[];
   hypotheses: Hypothesis[];
+  answer?: ResearchAnswer | null;
   confidence_summary: "High" | "Moderate" | "Low" | "Speculative";
   disclaimer: string;
   telemetry: Record<string, number>;

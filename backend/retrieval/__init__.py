@@ -51,13 +51,17 @@ async def multi_search(
     provs = providers or build_providers()
     mrp = max_results_per_provider or cfg.max_results_per_provider
 
-    tasks = [p.search(q, mrp) for p in provs for q in queries]
+    for provider in provs:
+        provider.errors.clear()
+    task_providers = [provider for provider in provs for _ in queries]
+    tasks = [provider.search(query, mrp) for provider in provs for query in queries]
     results = await asyncio.gather(*tasks, return_exceptions=True)
 
     seen: Dict[str, Paper] = {}
-    for r in results:
+    for provider, r in zip(task_providers, results):
         if isinstance(r, Exception):
-            logger.warning("Provider error: %s", r)
+            provider.errors.append(type(r).__name__)
+            logger.warning("Provider %s failed (%s)", provider.name, type(r).__name__)
             continue
         for paper in r:
             if year_cutoff is not None and paper.year and paper.year > year_cutoff:
@@ -70,4 +74,6 @@ async def multi_search(
                     seen[key] = paper
             else:
                 seen[key] = paper
-    return list(seen.values())
+    # Keep the amount sent to extraction/model stages bounded by the user's
+    # environment setting. This cap is across all queries and providers.
+    return list(seen.values())[: max(0, cfg.max_papers)]

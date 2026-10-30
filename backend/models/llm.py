@@ -104,6 +104,9 @@ class LLMClient:
                     max_tokens=max_tokens,
                     response_format_json=attempt == 0,
                 )
+                if not isinstance(text, str) or not text.strip():
+                    text = ""
+                    raise json.JSONDecodeError("Model returned no text content", text, 0)
                 return schema.model_validate_json(_extract_json(text))
             except (ValidationError, json.JSONDecodeError) as e:
                 logger.warning("Attempt %d: JSON parse/validation failed: %s", attempt, e)

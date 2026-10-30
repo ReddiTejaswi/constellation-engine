@@ -33,7 +33,10 @@ class EuropePMCProvider(RetrievalProvider):
                 r.raise_for_status()
                 data = r.json()
         except httpx.HTTPError as e:
-            logger.warning("Europe PMC request failed: %s", e)
+            response = getattr(e, "response", None)
+            status = response.status_code if response is not None else "network error"
+            self.errors.append(f"HTTP {status}")
+            logger.warning("Europe PMC request failed (%s)", status)
             return []
         results = data.get("resultList", {}).get("result", [])
         papers: List[Paper] = []

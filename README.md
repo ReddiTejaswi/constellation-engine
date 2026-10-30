@@ -22,6 +22,7 @@ User research question
     ↓ decomposition         (concepts, synonyms, search queries)
     ↓ retrieval             (PubMed, Europe PMC, bioRxiv, ClinicalTrials.gov …)
     ↓ evidence extraction   (atomic subject-relationship-object findings)
+    ↓ evidence answer       (direct, cited answer grounded in retrieved papers)
     ↓ graph build           (entity normalization + evidence provenance)
     ↓ multi-hop connections (INFERRED unless directly supported)
     ↓ contradiction scan    (antonym-based + LLM explanation)
@@ -185,3 +186,32 @@ number.
 The engine must never claim medical efficacy, cures, or causal certainty on
 the basis of inference alone. If evidence is insufficient the correct answer
 is "Insufficient evidence." — not a forced answer.
+
+## 10. Public hackathon demo (Render, free tier)
+
+The repository includes a Docker deployment and Render Blueprint in `Dockerfile`
+and `render.yaml`. Connect this GitHub repository to Render as a **Blueprint**
+and select branch `usr/reddi-tejaswi/init`. The Blueprint creates one free web
+service, builds the React frontend, serves it from FastAPI, and checks
+`/api/health`.
+
+Before the first deploy, set these service environment variables in Render:
+
+- `MODEL_NAME`: the exact model ID from Token Factory.
+- `MODEL_API_KEY`: the Token Factory API key. Enter it in Render's Environment
+  page as a secret; never put it in GitHub, `render.yaml`, or the frontend.
+
+`MODEL_BASE_URL` is set in the Blueprint. The public demo enables per-IP
+request throttling and limits each AI investigation to four unique papers.
+The answer verdict and summary are generated from the retrieved abstracts and
+validated findings; with AI disabled, API-only search shows papers but does not
+invent a yes/no answer.
+Keep the Render service on the Free plan. Free services sleep after 15 minutes
+without requests and may take about a minute to wake. Render's free plan has
+usage limits; if a payment method is attached, set a workspace spend limit to
+avoid charges beyond included usage. Nebius model requests use Token Factory
+credits separately.
+
+The local `.env` is excluded by both `.gitignore` and `.dockerignore`. The
+deployment image runs as a non-root user and does not copy local secrets or
+retrieval caches.

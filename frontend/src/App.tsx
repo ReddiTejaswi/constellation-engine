@@ -9,6 +9,7 @@ const STAGES = [
   "decomposition",
   "retrieval",
   "extraction",
+  "answer",
   "graph",
   "connections",
   "contradictions",
@@ -19,10 +20,18 @@ const STAGES = [
 ];
 
 type Benchmark = { id: string; title: string; cutoff_year: number };
+type LiteratureSearch = {
+  query: string;
+  queries_used: string[];
+  count: number;
+  papers: Paper[];
+  provider_issues: { provider: string; errors: string[] }[];
+  model_called: false;
+};
 
 export default function App() {
   const [question, setQuestion] = useState(
-    "What biological pathways could connect protein alpha-synuclein to neurodegeneration?"
+    "Will diabetes be treated by manipulating gene code?"
   );
   const [running, setRunning] = useState(false);
   const [stages, setStages] = useState<Record<string, { status: string; message: string }>>({});
@@ -32,6 +41,7 @@ export default function App() {
   const [benchmarkId, setBenchmarkId] = useState<string>("");
   const [benchmarkMetrics, setBenchmarkMetrics] = useState<any>(null);
   const [health, setHealth] = useState<any>(null);
+  const [searchResults, setSearchResults] = useState<LiteratureSearch | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
@@ -52,6 +62,7 @@ export default function App() {
 
   async function run() {
     setRunning(true);
+    setSearchResults(null);
     setReport(null);
     setBenchmarkMetrics(null);
     setSelectedEdge(null);
@@ -97,9 +108,33 @@ export default function App() {
     }
   }
 
+  async function searchApisOnly() {
+    setRunning(true);
+    setReport(null);
+    setBenchmarkMetrics(null);
+    setSearchResults(null);
+    setSelectedEdge(null);
+    setStages({});
+    try {
+      const response = await fetch("/api/search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.detail || "Literature search failed");
+      setSearchResults(data as LiteratureSearch);
+    } catch (e: any) {
+      setStages({ error: { status: "error", message: String(e?.message || e) } });
+    } finally {
+      setRunning(false);
+    }
+  }
+
   async function runBenchmark() {
     if (!benchmarkId) return;
     setRunning(true);
+    setSearchResults(null);
     setReport(null);
     setBenchmarkMetrics(null);
     setSelectedEdge(null);
@@ -127,7 +162,7 @@ export default function App() {
       <header className="topbar">
         <div className="logo">Scientific Discovery Engine</div>
         <div className="muted">
-          {health?.model ? `model: ${health.model}` : "model: unconfigured"} · providers: {health?.providers_enabled?.join(", ") || "—"}
+          {health?.model ? `model: ${health.model}` : "model: unconfigured"} · AI: {health?.model_enabled === false ? "paused" : "enabled"} · providers: {health?.providers_enabled?.join(", ") || "—"}
         </div>
       </header>
 
@@ -140,8 +175,11 @@ export default function App() {
             placeholder="Research question..."
             onKeyDown={(e) => { if (e.key === "Enter" && !running) run(); }}
           />
-          <button className="primary" disabled={running} onClick={run}>
-            {running ? "Investigating..." : "Investigate"}
+          <button className="primary" disabled={running || health?.model_enabled === false} onClick={run}>
+            {running ? "Investigating..." : health?.model_enabled === false ? "AI analysis paused" : "Run AI analysis"}
+          </button>
+          <button disabled={running} onClick={searchApisOnly} title="Search PubMed and Europe PMC without calling Nebius or using model credits">
+            {running ? "Searching..." : "Search APIs only"}
           </button>
           <select value={benchmarkId} onChange={(e) => setBenchmarkId(e.target.value)}>
             <option value="">— historical benchmark —</option>
@@ -151,7 +189,7 @@ export default function App() {
               </option>
             ))}
           </select>
-          <button disabled={running || !benchmarkId} onClick={runBenchmark}>
+          <button disabled={running || !benchmarkId || health?.model_enabled === false} onClick={runBenchmark}>
             Run benchmark
           </button>
         </div>
@@ -181,6 +219,35 @@ export default function App() {
           </div>
         )}
 
+        {searchResults && (
+          <div className="panel" style={{ margin: "8px 14px", maxHeight: 320, overflowY: "auto" }}>
+            <h3>Literature search · {searchResults.count} papers · no model called</h3>
+            <p className="meta">
+              {searchResults.count
+                ? `This API-only search found ${searchResults.count} papers. It does not generate a yes/no conclusion; use Run AI analysis to synthesize an answer from the retrieved evidence.`
+                : "No supporting papers were returned by the selected sources. That is a search miss, not proof that no evidence exists."}
+            </p>
+            <div className="meta">Searches: {searchResults.queries_used.join(" · ")}</div>
+            {searchResults.provider_issues.length > 0 && (
+              <div className="step error" style={{ marginTop: 8 }}>
+                Provider issues: {searchResults.provider_issues.map((i) => `${i.provider} (${i.errors.join(", ")})`).join("; ")}
+              </div>
+            )}
+            {searchResults.papers.slice(0, 30).map((paper) => (
+              <div className="card" key={`${paper.source}:${paper.identifier}`}>
+                <div>
+                  {paper.url ? (
+                    <a href={paper.url} target="_blank" rel="noreferrer">{paper.title}</a>
+                  ) : paper.title}
+                </div>
+                <div className="meta">{paper.year || "Year unknown"} · {paper.source} · {paper.identifier}</div>
+                <div className="meta" style={{ marginTop: 5 }}>{paper.abstract?.slice(0, 700) || "No abstract available."}</div>
+              </div>
+            ))}
+            {searchResults.count > 30 && <div className="meta">Showing the first 30 papers. Refine the search to narrow the list.</div>}
+          </div>
+        )}
+
         <div className="main" style={{ minHeight: 0 }}>
           <div style={{ display: "grid", gridTemplateRows: "60% 40%", minHeight: 0 }}>
             <div className="graph-wrap">
@@ -202,6 +269,22 @@ export default function App() {
           <div className="evidence-panel">
             {report && (
               <>
+                <div className="panel">
+                  <h3>Evidence-based answer · {report.answer?.verdict || "insufficient evidence"}</h3>
+                  <p>{report.answer?.answer || "No answer was generated for this report. Review the retrieved papers and findings below."}</p>
+                  {report.answer?.evidence_summary && <div className="meta">{report.answer.evidence_summary}</div>}
+                  {!!report.answer?.source_ids.length && (
+                    <div className="meta" style={{ marginTop: 8 }}>
+                      Sources: {report.answer.source_ids.map((id, i) => {
+                        const paper = papers[id];
+                        return <span key={id}>{i > 0 ? " · " : ""}{paper?.url ? <a href={paper.url} target="_blank" rel="noreferrer">{id}</a> : id}</span>;
+                      })}
+                    </div>
+                  )}
+                  {!!report.answer?.limitations.length && (
+                    <ul>{report.answer.limitations.map((limitation) => <li key={limitation}>{limitation}</li>)}</ul>
+                  )}
+                </div>
                 <div className="panel">
                   <h3>Key findings ({report.confidence_summary})</h3>
                   <ul>

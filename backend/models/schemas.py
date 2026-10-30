@@ -175,6 +175,14 @@ class ResearchGap(BaseModel):
     rationale: str
 
 
+class ResearchAnswer(BaseModel):
+    verdict: Literal["yes", "no", "mixed/uncertain", "insufficient evidence"]
+    answer: str
+    evidence_summary: str
+    source_ids: List[str] = []
+    limitations: List[str] = []
+
+
 # ------------------------------- Hypothesis -------------------------------
 
 
@@ -227,6 +235,7 @@ class DiscoveryReport(BaseModel):
     contradictions: List[Contradiction]
     gaps: List[ResearchGap]
     hypotheses: List[Hypothesis]
+    answer: Optional[ResearchAnswer] = None
     confidence_summary: Literal["High", "Moderate", "Low", "Speculative"] = "Moderate"
     disclaimer: str = (
         "These hypotheses are AI-generated research suggestions based on the "

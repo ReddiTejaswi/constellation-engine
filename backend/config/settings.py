@@ -28,13 +28,14 @@ class ModelConfig(BaseModel):
     base_url: str = Field(..., description="OpenAI-compatible base URL")
     api_key: str = Field(..., description="API key for the model endpoint")
     temperature: float = 0.2
-    max_tokens: int = 2048
+    max_tokens: int = 4096
     request_timeout: int = 120
 
 
 class RetrievalConfig(BaseModel):
     providers: List[str]
     max_results_per_provider: int = 8
+    max_papers: int = 20
     cache_dir: Path = Path("./data/retrieval_cache")
     ncbi_api_key: Optional[str] = None
     ncbi_tool: str = "scientific-discovery-engine"
@@ -44,6 +45,7 @@ class RetrievalConfig(BaseModel):
 class Settings(BaseModel):
     model: ModelConfig
     retrieval: RetrievalConfig
+    model_enabled: bool = True
     host: str = "0.0.0.0"
     port: int = 8000
     log_level: str = "INFO"
@@ -82,17 +84,19 @@ def get_settings() -> Settings:
             base_url=model_base_url,  # type: ignore[arg-type]
             api_key=model_api_key,  # type: ignore[arg-type]
             temperature=float(_env("MODEL_TEMPERATURE", "0.2")),
-            max_tokens=int(_env("MODEL_MAX_TOKENS", "2048")),
+            max_tokens=int(_env("MODEL_MAX_TOKENS", "4096")),
             request_timeout=int(_env("MODEL_REQUEST_TIMEOUT", "120")),
         ),
         retrieval=RetrievalConfig(
             providers=providers,
             max_results_per_provider=int(_env("RETRIEVAL_MAX_RESULTS_PER_PROVIDER", "8")),
+            max_papers=int(_env("RETRIEVAL_MAX_PAPERS", "20")),
             cache_dir=Path(_env("RETRIEVAL_CACHE_DIR", "./data/retrieval_cache")),
             ncbi_api_key=_env("NCBI_API_KEY"),
             ncbi_tool=_env("NCBI_TOOL", "scientific-discovery-engine"),
             ncbi_email=_env("NCBI_EMAIL"),
         ),
+        model_enabled=_env("MODEL_ENABLED", "true").lower() in {"1", "true", "yes", "on"},
         host=_env("HOST", "0.0.0.0"),
         port=int(_env("PORT", "8000")),
         log_level=_env("LOG_LEVEL", "INFO"),

@@ -1,0 +1,35 @@
+services:
+  - type: web
+    name: constellation-engine-demo
+    runtime: docker
+    plan: free
+    branch: usr/reddi-tejaswi/init
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: MODEL_NAME
+        sync: false
+      - key: MODEL_BASE_URL
+        value: https://api.tokenfactory.nebius.com/v1/
+      - key: MODEL_API_KEY
+        sync: false
+      - key: MODEL_ENABLED
+        value: "true"
+      - key: MODEL_MAX_TOKENS
+        value: "4096"
+      - key: MODEL_REQUEST_TIMEOUT
+        value: "75"
+      - key: RETRIEVAL_PROVIDERS
+        value: pubmed,europepmc
+      - key: RETRIEVAL_MAX_RESULTS_PER_PROVIDER
+        value: "4"
+      - key: RETRIEVAL_MAX_PAPERS
+        value: "4"
+      - key: DEMO_MODE
+        value: "true"
+      - key: DEMO_REQUESTS_PER_HOUR
+        value: "8"
+      - key: LOG_LEVEL
+        value: INFO

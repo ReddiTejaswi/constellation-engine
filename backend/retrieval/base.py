@@ -26,6 +26,8 @@ class RetrievalProvider(abc.ABC):
     def __init__(self) -> None:
         self._cache_dir = get_settings().retrieval.cache_dir
         self._cache_dir.mkdir(parents=True, exist_ok=True)
+        # Keep provider failures distinguishable from a valid zero-result search.
+        self.errors: List[str] = []
 
     @abc.abstractmethod
     async def search(self, query: str, max_results: int) -> List[Paper]: ...
@@ -40,14 +42,17 @@ class RetrievalProvider(abc.ABC):
         if not p.exists():
             return None
         try:
-            data = json.loads(p.read_text())
+            data = json.loads(p.read_text(encoding="utf-8"))
             return [Paper.model_validate(x) for x in data]
         except Exception:
             return None
 
     def _save_cache(self, query: str, max_results: int, papers: List[Paper]) -> None:
         p = self._cache_path(query, max_results)
-        p.write_text(json.dumps([x.model_dump() for x in papers], ensure_ascii=False))
+        p.write_text(
+            json.dumps([x.model_dump() for x in papers], ensure_ascii=False),
+            encoding="utf-8",
+        )
 
 
 def normalize_year(date_str: Optional[str]) -> Optional[int]:

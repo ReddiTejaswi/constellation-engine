@@ -1,7 +1,9 @@
 """PubMed retrieval via NCBI E-utilities (esearch + efetch)."""
 from __future__ import annotations
 
+import asyncio
 import logging
+import time
 import xml.etree.ElementTree as ET
 from typing import List, Optional
 
@@ -19,6 +21,38 @@ BASE = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"
 class PubMedProvider(RetrievalProvider):
     name = "pubmed"
 
+    def __init__(self) -> None:
+        super().__init__()
+        self._request_lock = asyncio.Lock()
+        self._last_request_at = 0.0
+
+    async def _get(self, client: httpx.AsyncClient, url: str, params: dict) -> httpx.Response:
+        """Serialize E-utilities requests and retry brief rate-limit responses."""
+        cfg = get_settings().retrieval
+        min_interval = 0.11 if cfg.ncbi_api_key else 0.35
+
+        for attempt in range(3):
+            async with self._request_lock:
+                delay = min_interval - (time.monotonic() - self._last_request_at)
+                if delay > 0:
+                    await asyncio.sleep(delay)
+                response = await client.get(url, params=params)
+                self._last_request_at = time.monotonic()
+
+            if response.status_code == 429 and attempt < 2:
+                retry_after = response.headers.get("Retry-After")
+                try:
+                    delay = max(float(retry_after), 0.5) if retry_after else 1.0 * (attempt + 1)
+                except ValueError:
+                    delay = 1.0 * (attempt + 1)
+                await asyncio.sleep(delay)
+                continue
+
+            response.raise_for_status()
+            return response
+
+        raise RuntimeError("PubMed request retry limit reached")
+
     async def search(self, query: str, max_results: int) -> List[Paper]:
         cached = self._load_cache(query, max_results)
         if cached is not None:
@@ -33,22 +67,29 @@ class PubMedProvider(RetrievalProvider):
 
         try:
             async with httpx.AsyncClient(timeout=30) as client:
-                esearch = await client.get(
+                esearch = await self._get(
+                    client,
                     f"{BASE}/esearch.fcgi",
-                    params={**base_params, "db": "pubmed", "term": query, "retmax": max_results, "retmode": "json"},
+                    {**base_params, "db": "pubmed", "term": query, "retmax": max_results, "retmode": "json"},
                 )
-                esearch.raise_for_status()
                 ids = esearch.json().get("esearchresult", {}).get("idlist", [])
                 if not ids:
                     self._save_cache(query, max_results, [])
                     return []
-                efetch = await client.get(
+                efetch = await self._get(
+                    client,
                     f"{BASE}/efetch.fcgi",
-                    params={**base_params, "db": "pubmed", "id": ",".join(ids), "retmode": "xml"},
+                    {**base_params, "db": "pubmed", "id": ",".join(ids), "retmode": "xml"},
                 )
-                efetch.raise_for_status()
         except httpx.HTTPError as e:
-            logger.warning("PubMed request failed: %s", e)
+            response = getattr(e, "response", None)
+            status = response.status_code if response is not None else "network error"
+            self.errors.append(f"HTTP {status}")
+            logger.warning("PubMed request failed (%s)", status)
+            return []
+        except Exception as e:
+            self.errors.append(type(e).__name__)
+            logger.warning("PubMed request failed (%s)", type(e).__name__)
             return []
 
         papers = _parse_pubmed_xml(efetch.text, query)

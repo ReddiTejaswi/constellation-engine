@@ -19,12 +19,14 @@ from backend.agents.gap_detector import detect_gaps
 from backend.agents.hypothesis_critic import critique_hypotheses
 from backend.agents.hypothesis_generator import generate_hypotheses
 from backend.agents.question_decomposer import decompose
+from backend.agents.research_answer import generate_research_answer
 from backend.graph.builder import build_graph, finding_lookup
 from backend.models.llm import LLMClient
 from backend.models.schemas import (
     DiscoveryReport,
     EvidenceStatus,
     Paper,
+    ResearchAnswer,
 )
 from backend.retrieval import multi_search, build_providers
 
@@ -35,6 +37,7 @@ STAGES = [
     "decomposition",
     "retrieval",
     "extraction",
+    "answer",
     "graph",
     "connections",
     "contradictions",
@@ -101,7 +104,7 @@ async def stream_pipeline(
     # 2. retrieval
     t0 = time.time()
     yield ev("retrieval", "started", "Searching scientific literature.")
-    prov_objs = build_providers(providers) if providers else None
+    prov_objs = build_providers(providers)
     papers: List[Paper] = await multi_search(
         dq.search_queries,
         providers=prov_objs,
@@ -109,16 +112,45 @@ async def stream_pipeline(
         year_cutoff=year_cutoff,
     )
     telemetry["retrieval_s"] = time.time() - t0
+    provider_issues = [
+        {"provider": provider.name, "errors": sorted(set(provider.errors))}
+        for provider in prov_objs
+        if provider.errors
+    ]
+    retrieval_message = f"Retrieved {len(papers)} unique sources."
+    if provider_issues:
+        issue_names = ", ".join(item["provider"] for item in provider_issues)
+        retrieval_message += f" Some searches failed ({issue_names}); results may be incomplete."
     yield ev(
         "retrieval",
         "completed",
-        f"Retrieved {len(papers)} unique sources.",
-        {"paper_count": len(papers), "sources": sorted({p.source for p in papers})},
+        retrieval_message,
+        {
+            "paper_count": len(papers),
+            "sources": sorted({p.source for p in papers}),
+            "provider_issues": provider_issues,
+        },
     )
 
     if not papers:
-        report = _empty_report(question, dq, telemetry, reason="No supporting evidence found in the searched sources.")
-        yield ev("report", "completed", "Empty report (no evidence).", {"report": report.model_dump()})
+        if provider_issues:
+            failed = ", ".join(item["provider"] for item in provider_issues)
+            reason = (
+                f"The literature search was incomplete because these sources failed: {failed}. "
+                "No scientific conclusion can be drawn from this run; retry or check provider availability."
+            )
+        else:
+            reason = (
+                "The enabled literature sources returned no matching papers. "
+                "This does not establish that supporting evidence is absent; try broader search terms."
+            )
+        report = _empty_report(question, dq, telemetry, reason=reason)
+        report_message = (
+            "Empty report (incomplete literature retrieval)."
+            if provider_issues
+            else "Empty report (no matching papers)."
+        )
+        yield ev("report", "completed", report_message, {"report": report.model_dump()})
         return
 
     # 3. extraction
@@ -127,6 +159,14 @@ async def stream_pipeline(
     findings = await extract_findings(papers, llm=llm)
     telemetry["extraction_s"] = time.time() - t0
     yield ev("extraction", "completed", f"Extracted {len(findings)} findings.", {"finding_count": len(findings)})
+
+    # 3b. synthesize a direct answer alongside findings so the UI can answer
+    # the user's question instead of only listing speculative hypotheses.
+    t0 = time.time()
+    yield ev("answer", "started", "Synthesizing a cited answer from the retrieved evidence.")
+    answer = await generate_research_answer(question, papers, findings, llm=llm)
+    telemetry["answer_s"] = time.time() - t0
+    yield ev("answer", "completed", f"Evidence answer: {answer.verdict}.", {"source_count": len(answer.source_ids)})
 
     # 4. graph build
     t0 = time.time()
@@ -189,6 +229,7 @@ async def stream_pipeline(
         contradictions=contradictions,
         gaps=gaps,
         hypotheses=hypotheses,
+        answer=answer,
         confidence_summary=overall,
         telemetry=telemetry,
     )
@@ -231,6 +272,17 @@ def _empty_report(question, dq, telemetry, reason: str) -> DiscoveryReport:
         contradictions=[],
         gaps=[],
         hypotheses=[],
+        answer=ResearchAnswer(
+            verdict="insufficient evidence",
+            answer=(
+                "The search was incomplete, so no scientific conclusion can be drawn from this run."
+                if "incomplete" in reason.lower()
+                else "No supporting evidence was found among the sources returned by this search; this does not prove that no evidence exists."
+            ),
+            evidence_summary=reason,
+            source_ids=[],
+            limitations=["Provider availability and search coverage may limit this result."],
+        ),
         confidence_summary="Speculative",
         telemetry=telemetry,
     )
